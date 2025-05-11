@@ -30,7 +30,7 @@ const lemonTranspoter = nodemailer.createTransport({
   secure: true,
   auth: {
     user: "lemonprojets@gmail.com",
-    pass: "ppeo hpft mgoc gdtk",
+    pass: "ppeo hpft mgoc gdtk",
   },
 });
 
