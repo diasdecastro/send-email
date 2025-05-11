@@ -26,8 +26,8 @@ const transporter = nodemailer.createTransport({
 const lemonTranspoter = nodemailer.createTransport({
   service: 'Gmail',
   host: "smtp.gmail.com",
+  port: 587,
   secure: true,
-  port: 465,
   auth: {
     user: "lemonprojets@gmail.com",
     pass: "ppeo hpft mgoc gdtk",
