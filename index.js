@@ -150,6 +150,111 @@ app.post('/lemon-projects', async (req, res) => {
   }
 }
 );
+
+// Unreachable URLs notification endpoint
+app.post('/notify-unreachable-urls', async (req, res) => {
+  try {
+    const { urls } = req.body;
+
+    // Validate required fields
+    if (!urls || !Array.isArray(urls) || urls.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'URLs array is required and must not be empty'
+      });
+    }
+
+    // Validate that all URLs are strings
+    const invalidUrls = urls.filter(url => typeof url !== 'string');
+    if (invalidUrls.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'All URLs must be strings'
+      });
+    }
+
+    const currentDate = new Date().toLocaleString('de-DE', {
+      timeZone: 'Europe/Berlin',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+
+    // Create HTML formatted list
+    const htmlUrlList = urls.map((url, index) => 
+      `<li style="margin-bottom: 8px;"><a href="${url}" style="color: #e74c3c; text-decoration: none;">${url}</a></li>`
+    ).join('');
+
+    // Create plain text formatted list
+    const textUrlList = urls.map((url, index) => `${index + 1}. ${url}`).join('\n');
+
+    // Send email using lemonTransporter
+    await lemonTranspoter.sendMail({
+      from: 'lemonprojets@gmail.com',
+      to: 'info@lemonprojects.de',
+      subject: `🚨 Unerreichbare URLs erkannt - ${currentDate}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #e74c3c; border-bottom: 2px solid #e74c3c; padding-bottom: 10px;">
+            🚨 Unerreichbare URLs Warnung
+          </h2>
+          <p style="color: #555; font-size: 16px;">
+            <strong>Datum:</strong> ${currentDate}
+          </p>
+          <p style="color: #555; font-size: 16px;">
+            Die folgenden <strong>${urls.length}</strong> URL${urls.length === 1 ? '' : 's'} konnten nicht erreicht werden:
+          </p>
+          <div style="background-color: #f8f9fa; border-left: 4px solid #e74c3c; padding: 15px; margin: 20px 0;">
+            <ul style="margin: 0; padding-left: 20px;">
+              ${htmlUrlList}
+            </ul>
+          </div>
+          <p style="color: #777; font-size: 14px; margin-top: 30px;">
+            Bitte überprüfen Sie diese URLs und ergreifen Sie bei Bedarf entsprechende Maßnahmen.
+          </p>
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+          <p style="color: #999; font-size: 12px;">
+            Dies ist eine automatische Benachrichtigung von Ihrem Überwachungssystem.
+          </p>
+        </div>
+      `,
+      text: `
+🚨 UNERREICHBARE URLs WARNUNG
+
+Datum: ${currentDate}
+
+Die folgenden ${urls.length} URL${urls.length === 1 ? '' : 's'} konnten nicht erreicht werden:
+
+${textUrlList}
+
+Bitte überprüfen Sie diese URLs und ergreifen Sie bei Bedarf entsprechende Maßnahmen.
+
+---
+Dies ist eine automatische Benachrichtigung von Ihrem Überwachungssystem.
+      `,
+    });
+
+    return res.json({
+      success: true,
+      message: `Email notification sent successfully for ${urls.length} unreachable URL${urls.length === 1 ? '' : 's'}`,
+      data: {
+        urlCount: urls.length,
+        sentAt: currentDate
+      }
+    });
+  } catch (error) {
+    console.error('Error sending unreachable URLs notification:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error sending email notification',
+      error: error.message
+    });
+  }
+});
+
 // Health check route
 app.get('/health', (req, res) => {
   res.json({
