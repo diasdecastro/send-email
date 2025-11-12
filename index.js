@@ -4,7 +4,7 @@ const nodemailer = require('nodemailer');
 const cors = require('cors');
 
 const app = express();
-const port = 8900;
+const port = process.env.PORT || 8900;
 
 // Middleware
 app.use(cors());
@@ -13,24 +13,24 @@ app.use(express.urlencoded({ extended: true }));
 
 // Create reusable transporter object using SMTP transport
 const transporter = nodemailer.createTransport({
-  service: 'Gmail',
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: true,
+  service: process.env.AR_SMTP_SERVICE,
+  host: process.env.AR_SMTP_HOST,
+  port: process.env.AR_SMTP_PORT,
+  secure: process.env.AR_SMTP_SECURE === 'true',
   auth: {
-    user: 'cristian.diasdecastro@gmail.com',
-    pass: 'hwkv zfmj hmzz uuii',
+    user: process.env.AR_SMTP_USER,
+    pass: process.env.AR_SMTP_PASS,
   },
 });
 
 const lemonTranspoter = nodemailer.createTransport({
-  service: 'Gmail',
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: true,
+  service: process.env.LEMON_SMTP_SERVICE,
+  host: process.env.LEMON_SMTP_HOST,
+  port: process.env.LEMON_SMTP_PORT,
+  secure: process.env.LEMON_SMTP_SECURE === 'true',
   auth: {
-    user: "lemonprojets@gmail.com",
-    pass: "ppeo hpft mgoc gdtk",
+    user: process.env.LEMON_SMTP_USER,
+    pass: process.env.LEMON_SMTP_PASS,
   },
 });
 
@@ -58,8 +58,8 @@ app.post('/ar-finanzberatung', async (req, res) => {
 
     // Send email
     await transporter.sendMail({
-      from: process.env.SMTP_USER,
-      to: 'info@ar-finanzberatung.de',
+      from: process.env.AR_SMTP_USER,
+      to: process.env.AR_RECIPIENT_EMAIL,
       subject: `Neue Kontaktanfrage von ${name}`,
       html: `
         <h2>Neue Kontaktanfrage</h2>
@@ -116,8 +116,8 @@ app.post('/lemon-projects', async (req, res) => {
 
     // Send email
     await lemonTranspoter.sendMail({
-      from: process.env.SMTP_USER,
-      to: 'info@lemonprojects.de',
+      from: process.env.LEMON_SMTP_USER,
+      to: process.env.LEMON_RECIPIENT_EMAIL,
       subject: `Neue Kontaktanfrage von ${name}`,
       html: `
         <h2>Neue Kontaktanfrage</h2>
@@ -193,8 +193,8 @@ app.post('/notify-unreachable-urls', async (req, res) => {
 
     // Send email using lemonTransporter
     await lemonTranspoter.sendMail({
-      from: 'lemonprojets@gmail.com',
-      to: 'info@lemonprojects.de',
+      from: process.env.LEMON_SMTP_USER,
+      to: process.env.LEMON_RECIPIENT_EMAIL,
       subject: `🚨 Unerreichbare URLs erkannt - ${currentDate}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
